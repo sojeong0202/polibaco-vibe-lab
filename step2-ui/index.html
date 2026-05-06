@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>폴리바코 - 국가 프로파일 카드</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #eef2ff;
+      min-height: 100vh;
+    }
+
+    /* 🐛 UI 버그 1: 헤더 폰트 크기가 너무 커서 레이아웃이 무너짐 */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(30, 58, 138, 0.3);
+    }
+    header .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .header-title {
+      font-size: 4rem;
+      font-weight: 700;
+    }
+    .header-subtitle {
+      font-size: 0.875rem;
+      opacity: 0.75;
+      margin-top: 0.3rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 2px 12px rgba(30, 58, 138, 0.08);
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 1.25rem;
+    }
+
+    /* 🐛 UI 버그 2: 폼 그리드가 없어서 입력란이 세로로 쌓임 */
+    .form-grid {
+      display: block;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 2.5rem;
+    }
+    .form-group.full {}
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    input, select, textarea {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      color: #111827;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #2563eb;
+    }
+    select { cursor: pointer; background: white; }
+    textarea { resize: vertical; min-height: 72px; }
+
+    .form-actions {
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 0.65rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.18s;
+    }
+
+    /* 🐛 UI 버그 3: 버튼 색상이 회색이고 글자가 너무 작음 */
+    .btn-primary {
+      background: #aaaaaa;
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 400;
+    }
+    .btn-danger {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .btn-danger:hover { background: #fecaca; }
+
+    .cards-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .badge {
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* 🐛 UI 버그 4: 카드 그리드가 없어서 카드가 세로로 길게 늘어짐 */
+    .cards-grid {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      border-radius: 0;
+      padding: 3.5rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(30, 58, 138, 0.07);
+      margin-bottom: 3px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .card-identity {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    /* 🐛 UI 버그 5: 국기 이모지가 너무 작아서 잘 안 보임 */
+    .card-flag { font-size: 0.9rem; line-height: 1; }
+    .card-name { font-size: 1.25rem; font-weight: 700; color: #111827; }
+    .card-system { font-size: 0.78rem; color: #6b7280; margin-top: 0.15rem; font-weight: 500; }
+
+    .card-body { display: flex; flex-direction: column; gap: 0.8rem; }
+    .field-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.15rem;
+    }
+    .field-value { font-size: 0.88rem; color: #374151; line-height: 1.5; }
+
+    .card-memo {
+      background: #f0f4ff;
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.83rem;
+      color: #4b5563;
+      font-style: italic;
+      border-left: 3px solid #93c5fd;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #9ca3af;
+    }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .empty-text { font-size: 0.95rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const initialCards = [
+      {
+        id: 1,
+        flag: '🇺🇸',
+        name: '미국',
+        system: '연방 공화제',
+        leader: '도널드 트럼프',
+        issues: '관세 전쟁, 우크라이나 지원 재검토, 이민 정책 강화',
+        memo: '2025년 1월 트럼프 2기 행정부 출범. NATO 분담금 갈등 재점화.',
+      },
+      {
+        id: 2,
+        flag: '🇨🇳',
+        name: '중국',
+        system: '사회주의 공화국 (일당제)',
+        leader: '시진핑',
+        issues: '대만 문제, 미중 무역 갈등, 부동산 경기 침체',
+        memo: '시진핑 3연임 공고화. 대미 반도체 규제 대응 주시 필요.',
+      },
+      {
+        id: 3,
+        flag: '🇫🇷',
+        name: '프랑스',
+        system: '반대통령제 (이원집정부제)',
+        leader: '에마뉘엘 마크롱',
+        issues: 'EU 통합, 이민 정책, 극우 세력 확장, 재정 적자',
+        memo: '2024년 총선 이후 소수 정부 운영 중. 르펜 세력의 부상 주목.',
+      },
+    ];
+
+    const FLAG_OPTIONS = [
+      { emoji: '🌍', label: '기타 / 직접 입력' },
+      { emoji: '🇰🇷', label: '한국' },
+      { emoji: '🇺🇸', label: '미국' },
+      { emoji: '🇨🇳', label: '중국' },
+      { emoji: '🇯🇵', label: '일본' },
+      { emoji: '🇩🇪', label: '독일' },
+      { emoji: '🇫🇷', label: '프랑스' },
+      { emoji: '🇬🇧', label: '영국' },
+      { emoji: '🇷🇺', label: '러시아' },
+      { emoji: '🇺🇦', label: '우크라이나' },
+      { emoji: '🇮🇱', label: '이스라엘' },
+      { emoji: '🇮🇳', label: '인도' },
+      { emoji: '🇧🇷', label: '브라질' },
+      { emoji: '🇸🇦', label: '사우디아라비아' },
+      { emoji: '🇮🇷', label: '이란' },
+      { emoji: '🇹🇷', label: '튀르키예' },
+    ];
+
+    const EMPTY_FORM = { flag: '🌍', name: '', system: '', leader: '', issues: '', memo: '' };
+
+    function App() {
+      const [cards, setCards] = useState(initialCards);
+      const [form, setForm] = useState(EMPTY_FORM);
+
+      const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+      };
+
+      const handleAddCard = () => {
+        if (!form.name.trim()) {
+          alert('국가명을 입력해주세요!');
+          return;
+        }
+        const newCard = { id: Date.now(), ...form };
+        setCards([...cards, newCard]);
+        setForm(EMPTY_FORM);
+      };
+
+      const handleDelete = (id) => {
+        setCards(cards.filter(card => card.id !== id));
+      };
+
+      return (
+        <div>
+          <header>
+            <div className="inner">
+              <div className="header-title">🌐 폴리바코 국가 프로파일</div>
+              <div className="header-subtitle">성공회대학교 정치외교학과 학회 · 국가·지역 분석 카드</div>
+            </div>
+          </header>
+
+          <div className="container">
+            <div className="form-card">
+              <div className="section-title">✏️ 새 국가 카드 추가</div>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>국기 선택</label>
+                  <select name="flag" value={form.flag} onChange={handleChange}>
+                    {FLAG_OPTIONS.map(f => (
+                      <option key={f.emoji} value={f.emoji}>{f.emoji} {f.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>국가명 *</label>
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="예: 독일"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>정치 체제</label>
+                  <input
+                    name="system"
+                    value={form.system}
+                    onChange={handleChange}
+                    placeholder="예: 연방 의원내각제"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>현 정상</label>
+                  <input
+                    name="leader"
+                    value={form.leader}
+                    onChange={handleChange}
+                    placeholder="예: 올라프 숄츠"
+                  />
+                </div>
+                <div className="form-group full">
+                  <label>주요 이슈</label>
+                  <input
+                    name="issues"
+                    value={form.issues}
+                    onChange={handleChange}
+                    placeholder="예: 에너지 전환, 러시아 제재, NATO 방위비"
+                  />
+                </div>
+                <div className="form-group full">
+                  <label>메모</label>
+                  <textarea
+                    name="memo"
+                    value={form.memo}
+                    onChange={handleChange}
+                    placeholder="분석 메모, 배경 정보 등을 자유롭게 입력하세요..."
+                  />
+                </div>
+              </div>
+              <div className="form-actions">
+                <button className="btn btn-primary" onClick={handleAddCard}>
+                  + 카드 추가
+                </button>
+              </div>
+            </div>
+
+            <div className="cards-header">
+              <div className="section-title" style={{margin: 0}}>📋 국가 프로파일 카드</div>
+              <span className="badge">{cards.length}개국 등록됨</span>
+            </div>
+
+            {cards.length === 0 ? (
+              <div className="empty">
+                <div className="empty-icon">🌏</div>
+                <div className="empty-text">
+                  아직 등록된 국가가 없습니다.<br />
+                  위 폼에서 새 국가 카드를 추가해보세요!
+                </div>
+              </div>
+            ) : (
+              <div className="cards-grid">
+                {cards.map(card => (
+                  <div key={card.id} className="card">
+                    <div className="card-header">
+                      <div className="card-identity">
+                        <div className="card-flag">{card.flag}</div>
+                        <div>
+                          <div className="card-name">{card.name}</div>
+                          {card.system && <div className="card-system">{card.system}</div>}
+                        </div>
+                      </div>
+                      <button className="btn btn-danger" onClick={() => handleDelete(card.id)}>
+                        삭제
+                      </button>
+                    </div>
+                    <div className="card-body">
+                      {card.leader && (
+                        <div>
+                          <div className="field-label">현 정상</div>
+                          <div className="field-value">👤 {card.leader}</div>
+                        </div>
+                      )}
+                      {card.issues && (
+                        <div>
+                          <div className="field-label">주요 이슈</div>
+                          <div className="field-value">📌 {card.issues}</div>
+                        </div>
+                      )}
+                      {card.memo && (
+                        <div className="card-memo">📝 {card.memo}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
